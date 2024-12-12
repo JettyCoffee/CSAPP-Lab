@@ -4,32 +4,32 @@
 
 ## 项目结构
 
-### [Notes](https://github.com/JettyCoffee/CSAPP-Lab/tree/main/Notes)
+### [My_Notes](https://github.com/JettyCoffee/CSAPP-Lab/tree/main/Notes)
 
-- [Lab01-Data_Lab]
-- [Lab02-Bomb_Lab]
+- [Lab01-Data_Lab](https://github.com/JettyCoffee/CSAPP-Lab/blob/main/Notes/Data_Lab.md)
+- [Lab02-Bomb_Lab](https://github.com/JettyCoffee/CSAPP-Lab/blob/main/Notes/Bomb_Lab.md)
 - [Lab03-Attack_Lab](https://github.com/JettyCoffee/CSAPP-Lab/blob/main/Notes/Attack_Lab.md)
 - [Lab04-Architecture_Lab]
 - [Lab05-Cache_Lab](https://github.com/JettyCoffee/CSAPP-Lab/blob/main/Notes/Cache_Lab.md)
 - [Lab06-Performance_Lab]
 - [Lab07-Shell_Lab]
-- [Lab08-Malloc_Lab]
+- [Lab08-Malloc_Lab](https://github.com/JettyCoffee/CSAPP-Lab/blob/main/Notes/Malloc_Lab.md)
 - [Lab09-Proxy_Lab]
 
 ### [Initial_labs]
 
 引用 [CMU官网](http://csapp.cs.cmu.edu/3e/labs.html)
 
-[Handout]
-- [Lab01-Data_Lab](https://github.com/JettyCoffee/CSAPP-Lab/blob/main/Notes/Data_Lab.md)
-- [Lab02-Bomb_Lab](https://github.com/JettyCoffee/CSAPP-Lab/blob/main/Notes/Bomb_Lab.md)
-- [Lab03-Attack_Lab](https://github.com/JettyCoffee/CSAPP-Lab/blob/main/Notes/Attack_Lab.md)
-- --[Lab04-Architecture_Lab]--
-- [Lab05-Cache_Lab](https://github.com/JettyCoffee/CSAPP-Lab/blob/main/Notes/Cache_Lab.md)
-- [Lab06-Performance_Lab]
-- [Lab07-Shell_Lab]
-- [Lab08-Malloc_Lab](https://github.com/JettyCoffee/CSAPP-Lab/blob/main/Notes/Malloc_Lab.md)
-- [Lab09-Proxy_Lab]
+[Writeup_OG]
+- [Lab01-Data_Lab](http://csapp.cs.cmu.edu/3e/datalab.pdf)
+- [Lab02-Bomb_Lab](http://csapp.cs.cmu.edu/3e/bomblab.pdf)
+- [Lab03-Attack_Lab](http://csapp.cs.cmu.edu/3e/attacklab.pdf)
+- [Lab04-Architecture_Lab](http://csapp.cs.cmu.edu/3e/archlab.pdf)
+- [Lab05-Cache_Lab](http://csapp.cs.cmu.edu/3e/cachelab.pdf)
+- [Lab06-Performance_Lab](http://csapp.cs.cmu.edu/3e/shlab.pdf)
+- [Lab07-Shell_Lab](http://csapp.cs.cmu.edu/3e/shlab.pdf)
+- [Lab08-Malloc_Lab](https://csapp.cs.cmu.edu/3e/malloclab.pdf)
+- [Lab09-Proxy_Lab](http://csapp.cs.cmu.edu/3e/proxylab.pdf)
 
 ## 实验进度：
 

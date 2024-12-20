@@ -36,20 +36,21 @@ team_t team = {
 };
 
 //注释采用中文
+#define ALIGNMENT 8 //ALIGNMENT是8字节对齐
+#define ALIGN(size) (((size) + (ALIGNMENT-1)) & ~0x7) //ALIGN函数将size向上对齐
+//SIZE_T_SIZE是size_t的大小
+#define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
 #define WSIZE 4 //字长大小
 #define DSIZE 8 //双字大小
-#define CLASS_SIZE 16 //大小类的数量
+#define CLASS_SIZE 20 //大小类的数量
 
-#define CHUNKSIZE (1<<5) //初始堆大小和扩展堆大小
+#define CHUNKSIZE (1<<12) //初始堆大小和扩展堆大小
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 #define PACK(size, alloc) ((size) | (alloc)) //将大小和分配位打包
 
 #define GET(p) (*(unsigned int *)(p)) //将地址p处的值读出
-#define GET_HEAD(class) ((unsigned int *)(long)(GET(heap_listp + (class * WSIZE)))) //获取大小类的头指针
-#define GET_PREV(bp) ((unsigned int *)(long)(GET(bp))) //找出前序块指针
-#define GET_NEXT(bp) ((unsigned int *)(long)(GET((unsigned int*)bp + 1))) //找出后继块指针
-
-#define PUT(p, val) ((*(unsigned int *)(p)) = (val)) //将值val写入地址p处
+#define GET_HEAD(class) ((unsigned int *)(GET(heap_listp + (class * WSIZE)))) //获取大小类的头指针
+#define PUT(p, val) (*(unsigned int *)(p) = (val)) //将值val写入地址p处
 
 #define GET_SIZE(p) (GET(p) & ~0x7) //当前块中的block_size读出
 #define GET_ALLOC(p) (GET(p) & 0x1) //将当前块中的alloc状态读出
@@ -60,7 +61,8 @@ team_t team = {
 #define NEXT_BLKP(bp) ((char *)(bp) + GET_SIZE(((char *)(bp) - WSIZE))) //返回下一个块的地址
 #define PREV_BLKP(bp) ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE))) //返回上一个块的地址
 
-
+#define GET_PREV(bp) (*(char **)(bp)) //找出前序块指针
+#define GET_NEXT(bp) (*(char **)(bp + WSIZE)) //找出后继块指针
 
 //函数声明段
 static char *heap_listp = 0;
@@ -77,8 +79,9 @@ void *best_fit(size_t asize);
 int mm_init(void)
 {
     //申请4个字长的空间
-    if((heap_listp = mem_sbrk((4+CLASS_SIZE)*WSIZE)) == (void *)-1)
+    if((heap_listp = mem_sbrk(4 * WSIZE)) == (void *)-1)
         return -1;
+
     //申请20个大小类头指针
     for(int i = 0; i < CLASS_SIZE; i++) {
         PUT(heap_listp + (i * WSIZE), 0);
@@ -89,7 +92,7 @@ int mm_init(void)
     PUT(heap_listp + ((2 + CLASS_SIZE) * WSIZE), PACK(DSIZE, 1)); //序言块脚部
     PUT(heap_listp + ((3 + CLASS_SIZE) * WSIZE), PACK(0, 1)); //结尾块头部
 
-    if(extend_heap(CHUNKSIZE) == NULL)
+    if(extend_heap(CHUNKSIZE / WSIZE) == NULL)
         return -1;
     return 0;
 }
@@ -151,22 +154,19 @@ void delete_block(void *bp) {
 
     // PREV 和 NEXT 都为空 -> 头节点设为 NULL
     if (GET_PREV(bp) == NULL && GET_NEXT(bp) == NULL) {
-        PUT((heap_listp + (class * WSIZE)), 0);
-
+        PUT((unsigned int *)(heap_listp + (class * WSIZE)), (unsigned int)NULL);
     // PREV 为空，NEXT 不为空 (第一个节点) -> 头节点设为 NEXT
     } else if (GET_PREV(bp) == NULL && GET_NEXT(bp) != NULL) {
-        PUT((heap_listp + (class * WSIZE)), (unsigned int)GET_NEXT(bp));
-        PUT(GET_NEXT(bp), 0);
-
+        PUT((unsigned int *)(heap_listp + (class * WSIZE)), (unsigned int)GET_NEXT(bp));
+        PUT((unsigned int *)GET_NEXT(bp), (unsigned int)NULL);
     // PREV 不为空，NEXT 为空 (最后一个节点) -> PREV 的 NEXT 设为 NULL
     } else if (GET_PREV(bp) != NULL && GET_NEXT(bp) == NULL) {
-        PUT((GET_PREV(bp) + 1), 0);
+        PUT((unsigned int *)(GET_PREV(bp) + WSIZE), (unsigned int)NULL);
     }
-
     // PREV 和 NEXT 都不为空 -> PREV 的 NEXT 设为 NEXT，NEXT 的 PREV 设为 PREV
     else {
-        PUT((GET_PREV(bp) + 1), (unsigned int)GET_NEXT(bp));
-        PUT(GET_NEXT(bp), (unsigned int)GET_PREV(bp));
+        PUT((unsigned int *)(GET_PREV(bp) + WSIZE), (unsigned int)GET_NEXT(bp));
+        PUT((unsigned int *)GET_NEXT(bp), (unsigned int)GET_PREV(bp));
     }
 }
 
@@ -236,25 +236,41 @@ static void *coalesce(void *bp) {
 }
 
 
-void *find_fit(size_t asize) {
+void *first_fit(size_t asize) {
     int class = select_class(asize);
     unsigned int *bp;
 
     // 如果找不到合适的块，那么就搜索下一个更大的大小类
     while (class < CLASS_SIZE) {
-        bp = GET_HEAD(class); // 获取当前大小类的头指针
+        bp = (unsigned int *)GET_HEAD(class);
         // 不为空则寻找
         while (bp) {
             if (GET_SIZE(HDRP(bp)) >= asize) {
                 return (void *)bp;
             }
             // 用后继找下一块
-            bp = GET_NEXT(bp);  // 强制转换为 unsigned int *
+            bp = (unsigned int *)GET_NEXT(bp);  // 强制转换为 unsigned int *
         }
         // 找不到则进入下一个大小类
         class++;
     }
     return NULL;
+}
+
+
+void *best_fit(size_t asize){
+    void *bp;
+    void *best_bp = NULL;
+    size_t min_size = 0;
+    for(bp = heap_listp; GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp)){
+        if((GET_SIZE(HDRP(bp)) >= asize) && (!GET_ALLOC(HDRP(bp)))){
+            if(min_size ==0 || min_size > GET_SIZE(HDRP(bp))){
+                min_size = GET_SIZE(HDRP(bp));
+                best_bp = bp;
+            }
+        }
+    }
+    return best_bp;
 }
 
 /* 
@@ -273,7 +289,7 @@ void *mm_malloc(size_t size) {
     else
         asize = DSIZE * ((size + DSIZE + DSIZE - 1) / DSIZE);
 
-    if ((bp = find_fit(asize)) != NULL) {
+    if ((bp = first_fit(asize)) != NULL) {
         place(bp, asize);
         return bp;
     }
